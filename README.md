@@ -398,5 +398,5 @@ observe 方法的作用就是给非 VNode 的对象类型数据添加一个 Obse
 - Observer类
 Observer 是一个类，它的作用是给对象的属性添加 getter 和 setter，用于依赖收集和派发更新
 ```
-
+demo
 ```
