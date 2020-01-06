@@ -2,7 +2,7 @@
 vue 知识点的深入学习 & 源码学习
 
 ## vue源码学习
-
+数据更新DOM,数据驱动DOM
 ### vue入口
 - vue 本身
 ```
@@ -135,11 +135,149 @@ function patch (oldVnode, vnode, hydrating, removeOnly) {}
 ```
 - vue 初始化过程
   new Vue实例 -> init初始化参数 -> $mount调用 -> compile编译template -> render生成节点 -> vnode -> pacth映射dom -> DOM
+  初始化即是一个深度遍历的过程
+
 ### Component组件化
 - render 中的 h()函数
 ```
 可以传入组件对象; 或者 tag 标签. 然后对应的调用createComponent方法
 可分为组件 vnode 和 标签元素vnode
 ```
-- patch 函数
+- 普通元素根节点组件的 vnode patch
+```
+function createElm (
+  vnode,
+  insertedVnodeQueue,
+  parentElm,
+  refElm,
+  nested,
+  ownerArray,
+  index
+) {
+  // ...
+  if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
+    return
+  }
 
+  const data = vnode.data
+  const children = vnode.children
+  const tag = vnode.tag
+  if (isDef(tag)) {
+    // ...
+
+    vnode.elm = vnode.ns
+      ? nodeOps.createElementNS(vnode.ns, tag)
+      : nodeOps.createElement(tag, vnode)
+    setScope(vnode)
+
+    /* istanbul ignore if */
+    if (__WEEX__) {
+      // ...
+    } else {
+      createChildren(vnode, children, insertedVnodeQueue)
+      if (isDef(data)) {
+        invokeCreateHooks(vnode, insertedVnodeQueue)
+      }
+      insert(parentElm, vnode.elm, refElm)
+    }
+    
+    // ...
+  } else if (isTrue(vnode.isComment)) {
+    vnode.elm = nodeOps.createComment(vnode.text)
+    insert(parentElm, vnode.elm, refElm)
+  } else {
+    vnode.elm = nodeOps.createTextNode(vnode.text)
+    insert(parentElm, vnode.elm, refElm)
+  }
+}
+```
+- 子组件 vnode patch
+```
+function createComponent (vnode, insertedVnodeQueue, parentElm, refElm) {
+  let i = vnode.data
+  if (isDef(i)) {
+    // ....
+    if (isDef(i = i.hook) && isDef(i = i.init)) {
+      i(vnode, false /* hydrating */)
+    }
+    // ...
+    if (isDef(vnode.componentInstance)) {
+      initComponent(vnode, insertedVnodeQueue)
+      insert(parentElm, vnode.elm, refElm)
+      if (isTrue(isReactivated)) {
+        reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm)
+      }
+      return true
+    }
+  }
+}
+```
+完成组件的整个 patch 过程后，最后执行 insert(parentElm, vnode.elm, refElm) 完成组件的 DOM 插入，正常过程dom 插入顺序是先父后子, 但如果组件 patch 过程中又创建了子组件，那么DOM 的插入顺序是先子后父。这里我们也可以分析父子组件的生命周期等特性...
+
+- 初始化配置合并 vm.$options
+```
+Vue.prototype._init = function (options?: Object) {
+  // merge options
+  if (options && options._isComponent) {
+    // optimize internal component instantiation
+    // since dynamic options merging is pretty slow, and none of the
+    // internal component options needs special treatment.
+    initInternalComponent(vm, options)
+  } else {
+    vm.$options = mergeOptions(
+      resolveConstructorOptions(vm.constructor),
+      options || {},
+      vm
+    )
+  }
+  // ...
+}
+```
+两种情况下的 merge 逻辑: 分别为: new Vue() 和 Vue.extend()
+第二个继承自 Vue, 最后生成的配置项在 options 的__proto__中
+- lifecycle
+```
+1.beforeCreate && created
+Vue.prototype._init = function (options?: Object) {
+  // ...
+  initLifecycle(vm)
+  initEvents(vm)
+  initRender(vm)
+  callHook(vm, 'beforeCreate')
+  initInjections(vm)   // resolve injections before data/props
+  initState(vm)        // 初始化 props、data、methods、watch、computed 等属性
+  initProvide(vm)      // resolve provide after data/props
+  callHook(vm, 'created')
+  // 在 created 钩子中可以访问 props 等属性...
+}
+
+2.beforeMount && mounted
+mounted钩子: 组件的 VNode patch 到 DOM 后，会执行 invokeInsertHook 函数，把 insertedVnodeQueue 里保存的钩子函数依次执行一遍, insertedVnodeQueue 的添加顺序是先子后父，所以对于同步渲染的子组件而言，mounted 钩子函数的执行顺序也是先子后父;
+同时, 也会实例化一个渲染的 Watcher 去监听 vm 上的数据变化重新渲染
+
+3.beforeUpdate & updated
+beforeUpdate 和 updated 的钩子函数执行时机都是在数据更新的时候
+beforeUpdate 的执行时机是在渲染 Watcher 的 before 函数中
+update 的执行时机是在flushSchedulerQueue 函数调用的时候
+
+4.beforeDestroy & destroyed
+自内向外递归销毁组件自身
+```
+- 高阶异步组件
+```
+const AsyncComp = () => ({
+  // 需要加载的组件。应当是一个 Promise
+  component: import('./MyComp.vue'),
+  // 加载中应当渲染的组件
+  loading: LoadingComp,
+  // 出错时渲染的组件
+  error: ErrorComp,
+  // 渲染加载中组件前的等待时间。默认：200ms。
+  delay: 200,
+  // 最长等待时间。超出此时间则渲染错误组件。默认：Infinity
+  timeout: 3000
+})
+Vue.component('async-example', AsyncComp)
+```
+
+### 响应式系统
