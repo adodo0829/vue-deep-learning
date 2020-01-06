@@ -1,8 +1,6 @@
-# vue-deep-learning
-vue 知识点的深入学习 & 源码学习
-
-## vue源码学习
+# vue 源码学习
 数据更新DOM,数据驱动DOM
+
 ### vue入口
 - vue 本身
 ```
