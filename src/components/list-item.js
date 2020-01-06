@@ -1,14 +1,14 @@
 export default {
-    props: {
-        render: {
-            type: Function
-        },
-        item: {
-            type: String
-        }
-
+  props: {
+    render: {
+      type: Function
     },
-    render(h) { // createElement  
-        return this.render(h, this.item)
+    item: {
+      type: String
     }
+  },
+  render (h) {
+    // createElement
+    return this.render(h, this.item)
+  }
 }
