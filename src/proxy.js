@@ -19,6 +19,6 @@ const t = {
     a: 1
   }
 }
-// 待 '_data' 对象的值代理到 t 上
+// 将 '_data' 对象的值代理到 t 上
 proxy(t, '_data', 'a')
 console.log(t)
