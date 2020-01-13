@@ -913,3 +913,28 @@ function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly
 
 组件更新的过程核心就是新旧 vnode diff，对新旧节点相同以及不同的情况分别做不同的处理。新旧节点不同的更新流程是创建新节点->更新父占位符节点->删除旧节点；而新旧节点相同的更新流程是去获取它们的 children，根据不同情况做不同的更新逻辑。最复杂的情况是新旧节点相同且它们都存在子节点，那么会执行 updateChildren 逻辑
 ```
+### 挂载编译入口
+Vue.prototype.$mount => compileToFunctions(generate render func) => AST obj tree
+```
+解析模板字符串生成 AST
+  const ast = parse(template.trim(), options)
+  parse 利用正则, advance()进位匹配
+  // AST 元素处理: like v-if, v-for
+  processIf, processFor
+  AST 元素节点总共有 3 种类型，type 为 1 表示是普通元素，为 2 表示是表达式，为 3 表示是纯文本
+
+优化语法树
+  optimize(ast, options)
+  静态节点标记
+
+生成代码
+  const code = generate(ast, options)
+  将 AST 树转换成可执行的代码
+  genIf: return (isShow) ? genElement(el, state) : _e()
+
+  genFor: _l((data), function(item, index) {
+    return genElememt(el, state)
+  })
+```
+
+### 扩展项
