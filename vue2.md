@@ -1046,7 +1046,26 @@ export function eventsMixin (Vue: Class<Component>) {
 }
 这里把所有的事件用 vm._events 存储起来，当执行 vm.$on(event,fn) 的时候，按事件的名称 event 把回调函数 fn 存储起来 vm._events[event].push(fn)。当执行 vm.$emit(event) 的时候，根据事件名 event 找到所有的回调函数 let cbs = vm._events[event]，然后遍历执行所有的回调函数。当执行 vm.$off(event,fn) 的时候会移除指定事件名 event 和指定的 fn 当执行 vm.$once(event,fn) 的时候，内部就是执行 vm.$on，并且当回调函数执行一次后再通过 vm.$off 移除事件的回调，这样就确保了回调函数只执行一次。
 ```
-- v-model 双向绑定
+- v-model 双向绑定, DOM与data相互驱动
 ```
+// parse 先解析 v-model 绑定的 value, genDirectives会生成对应的vnode code
+<!-- 表单 -->
+<input v-model="message">
+<input
+  :value="message"
+  @input="message=$event.target.value"
+>
+<!-- 组件 -->
+child: @input="this.$emit('input', ev.target.value)"
+<child v-model="v"></child>
+```
+- 插槽
+```
+普通插槽和作用域插槽的实现。它们有一个很大的差别是数据作用域，普通插槽是在父组件编译和渲染阶段生成 vnodes，所以数据的作用域是父组件实例，子组件渲染的时候直接拿到这些渲染好的 vnodes。而对于作用域插槽，父组件在编译和渲染阶段并不会直接生成 vnodes，而是在父节点 vnode 的 data 中保留一个 scopedSlots 对象，存储着不同名称的插槽以及它们对应的渲染函数，只有在编译和渲染子组件阶段才会执行这个渲染函数生成 vnodes，由于是在子组件环境执行的，所以对应的数据作用域是子组件实例。
 
+两种插槽的目的都是让子组件 slot 占位符生成的内容由父组件来决定，但数据的作用域会根据它们 vnodes 渲染时机不同而不同。
+```
+- 内置组件
+```
+自定义的 render 函数重写渲染逻辑
 ```
