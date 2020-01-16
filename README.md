@@ -1,6 +1,5 @@
-## vue2的实现原理
+# vue2简单实现
 ```
-// vue2 响应式
 import { observe } from './observe'
 import { Compile } from './compile'
 
@@ -39,5 +38,11 @@ class MyVue {
     })
   }
 }
+
+```
+# vue3响应式原理 实现 reactive()
+- 前置知识回顾
+proxy, Reflect, weakSet, weakMap...
+```
 
 ```

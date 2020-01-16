@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 // import './proxy'
 // import '../myVue2'
+import './newProxy'
 Vue.config.productionTip = false
 
 new Vue({
