@@ -1,6 +1,6 @@
-# vue2的实现原理
+## vue2的实现原理
 ```
-// vue 响应式
+// vue2 响应式
 import { observe } from './observe'
 import { Compile } from './compile'
 
@@ -14,7 +14,9 @@ class MyVue {
     // 添加数据监听
     observe(this.data)
     // 模板解析: parse, optimize, generate, 其中 watcher 写在 complile 中了
-    // 当 解析生成的render function 被渲染的时候，因为会读取所需对象的值，所以会触发 getter 函数进行依赖收集，依赖收集的目的是将观察者 Watcher 对象存放到当前闭包中的订阅者 Dep 的 subs 中。
+    // 当 解析生成的render function 被渲染的时候，因为会读取所需对象的值，
+    // 所以会触发 getter 函数进行依赖收集，依赖收集的目的是
+    // 将观察者 Watcher 对象存放到当前闭包中的订阅者 Dep 的 subs 中。
     new Compile(options.el, this)
     // 挂载DOM
     options.mounted.call(this)
