@@ -1,6 +1,5 @@
-# vue2的实现原理
+# vue2的响应式实现原理
 ```
-// vue 响应式
 import { observe } from './observe'
 import { Compile } from './compile'
 
@@ -39,3 +38,4 @@ class MyVue {
 }
 
 ```
+# vue3响应式原理
