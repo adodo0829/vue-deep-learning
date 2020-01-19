@@ -5,6 +5,7 @@ import store from './store'
 // import './proxy'
 // import '../myVue2'
 import './newProxy'
+import '../myVue3'
 Vue.config.productionTip = false
 
 new Vue({
